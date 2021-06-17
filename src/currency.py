@@ -4,6 +4,7 @@ import argparse
 import datetime
 import warnings
 from pathlib import Path
+import yaml
 
 warnings.filterwarnings("ignore")
 
@@ -23,6 +24,7 @@ class currency:
         Returns: DF with source, date and rates
         """
         url = f'https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/{self.base}.json'
+        print(url)
         resopnse = requests.get(url)
         if resopnse.status_code != 200:
             print(f'Failed\n\nResponse Code: {resopnse.status_code}')
@@ -37,8 +39,10 @@ class currency:
     def getFromSource2(self):
         """
         Source: frankfurter
+        Returns: DF with source, date and rates
         """
         url = f'https://api.frankfurter.app/latest?from={self.base}'
+        print(url)
         resopnse = requests.get(url)
         if resopnse.status_code != 200:
             print(f'Failed\n\nResponse Code: {resopnse.status_code}')
@@ -63,11 +67,12 @@ class currency:
         # df[df.quote.isin(common_curr)].to_csv('all.csv', index=False)
         if self.operation == 'sell':
             idx = df.groupby(['quote'])['rates'].transform(max) == df['rates']
+        # if self.operation == 'buy':
         else:
             idx = df.groupby(['quote'])['rates'].transform(min) == df['rates']
         df = df[idx]
         df['Operation'] = self.operation
-        df['Base Currency'] = self.base
+        df['Base Currency'] = self.base.upper()
         return df[idx].reset_index(drop=True)
         df[df.quote.isin(common_curr)].to_csv('buy.csv', index=False)
     def storeData(self):
@@ -75,68 +80,51 @@ class currency:
         dt = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         output_path = "../data"
         fname = f'{output_path}/bestrate_{self.operation}_{dt}.csv'
+        print(f"Output is saved here: {fname}")
         Path(output_path).mkdir(parents=True, exist_ok=True)
         df.to_csv(fname, index=False)
-        return True
+        return fname
 
-
-
-currency_obj = currency('sell', 'eur')
-currency_obj.storeData()
-currency_obj = currency('buy', 'eur')
-currency_obj.storeData()
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=(
-        'pdf2pdfocr.py [https://github.com/LeoFCardoso/pdf2pdfocr] version %s (http://semver.org/lang/pt-BR/)'
-        % VERSION),
-                                     formatter_class=argparse.
-                                     RawTextHelpFormatter)
+    # capturing all valid currencies
+    with open('config.yaml') as f:
+        try:
+            config_dict = yaml.safe_load(f)
+        except yaml.YAMLError as exc:
+            print(exc)
 
-# Output
-"""
-• Request Timestamp – timestamp when a request was submitted to CLI
-• Trade Operation – a value of the second parameter
-• Base Currency – a value of the first parameter
-• Quote Currency – a value of quote currency retrieved from APIs
-• Exchange Rate – the best exchange rate for the given currency couple
-• Provider – the name of the provider that returned the best rate
-"""
+    my_parser = argparse.ArgumentParser()
 
-# Common Currencies
-"""
-common_curr = [
-'AUD',
-'BGN',
-'BRL',
-'CAD',
-'CHF',
-'CNY',
-'CZK',
-'DKK',
-'GBP',
-'HKD',
-'HRK',
-'HUF',
-'IDR',
-'ILS',
-'INR',
-'ISK',
-'JPY',
-'KRW',
-'MXN',
-'MYR',
-'NOK',
-'NZD',
-'PHP',
-'PLN',
-'RON',
-'RUB',
-'SEK',
-'SGD',
-'THB',
-'TRY',
-'USD',
-'ZAR']
-"""
+    my_parser.add_argument('-s', '--sell', 
+                           dest='sell',
+                           action='store_true',
+                           default=False)
+    my_parser.add_argument('-b', '--buy', 
+                           dest='buy',
+                           action='store_true',
+                           default=False,
+                           help='Set a switch to true')
+    my_parser.add_argument('base',
+                           action='store',
+                           nargs=1,
+                           choices=config_dict['valid_currencies'],
+                           type=str.upper,
+                           help='Enter base currency from the valid currency codes')
+
+    args = my_parser.parse_args()
+    print(args.sell)
+    print(args.buy)
+    print(args.base)
+    base = args.base[0].lower()
+    if args.buy:
+        print(f"Finding best buy value for {base}")
+        currency_obj = currency('buy', base)
+        currency_obj.storeData()
+    if args.sell:
+        print(f"Finding best sell value for {base}")
+        currency_obj = currency('sell', base)
+        currency_obj.storeData()
+
+    print(vars(args))
