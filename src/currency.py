@@ -24,13 +24,13 @@ class currency:
         Returns: DF with source, date and rates
         """
         url = f'https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/{self.base}.json'
-        print(url)
+        print(f"Fetching data from {url}")
         resopnse = requests.get(url)
         if resopnse.status_code != 200:
             print(f'Failed\n\nResponse Code: {resopnse.status_code}')
-            return
+            return pd.DataFrame({'date': [], 'rates': [], 'source': []})
         df = pd.DataFrame(resopnse.json())
-        df = df.rename({'eur': 'rates'}, axis=1)
+        df = df.rename({self.base: 'rates'}, axis=1)
         df.index = df.index.str.upper()
         df['source'] = 'fawazahmed0'
         return df[['date', 'rates',
@@ -42,16 +42,20 @@ class currency:
         Returns: DF with source, date and rates
         """
         url = f'https://api.frankfurter.app/latest?from={self.base}'
-        print(url)
-        resopnse = requests.get(url)
+        print(f"Fetching data from {url}")
+        try:
+            resopnse = requests.get(url)
+        except Exception as e:
+            return pd.DataFrame({'date': [], 'rates': [], 'source': []})
         if resopnse.status_code != 200:
             print(f'Failed\n\nResponse Code: {resopnse.status_code}')
+            return pd.DataFrame({'date': [], 'rates': [], 'source': []})
         df = pd.DataFrame(resopnse.json())
         df['source'] = 'frankfurter'
         return df[['date', 'rates',
                    'source']].rename_axis('quote').reset_index()
 
-    def getBestRate(self):
+    def compareRates(self):
         """
         Pulls data from all the sources and selects based on the operation
         Returns: DF with best rates 
@@ -64,28 +68,32 @@ class currency:
         df1 = self.getFromSource1()
         df2 = self.getFromSource2()
         df = pd.concat([df1, df2]).reset_index(drop=True)
-        # df[df.quote.isin(common_curr)].to_csv('all.csv', index=False)
         if self.operation == 'sell':
             idx = df.groupby(['quote'])['rates'].transform(max) == df['rates']
-        # if self.operation == 'buy':
         else:
             idx = df.groupby(['quote'])['rates'].transform(min) == df['rates']
         df = df[idx]
-        df['Operation'] = self.operation
+        df['Operation'] = self.operation.capitalize()
         df['Base Currency'] = self.base.upper()
         return df[idx].reset_index(drop=True)
-        df[df.quote.isin(common_curr)].to_csv('buy.csv', index=False)
-    def storeData(self):
-        df = self.getBestRate()
+
+    def storeData(self, df):
+        """
+        Takes the final input and saves in the output_path
+        This can later be updated to save the output in any database. With appropriate connection details passed to it.
+        """
         dt = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         output_path = "../data"
-        fname = f'{output_path}/bestrate_{self.operation}_{dt}.csv'
+        fname = f'{output_path}/bestrate_{self.operation}_{self.base}_{dt}.csv'
         print(f"Output is saved here: {fname}")
         Path(output_path).mkdir(parents=True, exist_ok=True)
+        df.columns = df.columns.str.capitalize()
         df.to_csv(fname, index=False)
         return fname
 
-
+    def getBestRate(self):
+        df = self.compareRates()
+        self.storeData(df)
 
 if __name__ == '__main__':
     # capturing all valid currencies
@@ -97,11 +105,11 @@ if __name__ == '__main__':
 
     my_parser = argparse.ArgumentParser()
 
-    my_parser.add_argument('-s', '--sell', 
+    my_parser.add_argument('-s', '--sell',
                            dest='sell',
                            action='store_true',
                            default=False)
-    my_parser.add_argument('-b', '--buy', 
+    my_parser.add_argument('-b', '--buy',
                            dest='buy',
                            action='store_true',
                            default=False,
@@ -114,17 +122,13 @@ if __name__ == '__main__':
                            help='Enter base currency from the valid currency codes')
 
     args = my_parser.parse_args()
-    print(args.sell)
-    print(args.buy)
-    print(args.base)
     base = args.base[0].lower()
     if args.buy:
         print(f"Finding best buy value for {base}")
         currency_obj = currency('buy', base)
-        currency_obj.storeData()
+        currency_obj.getBestRate()
     if args.sell:
         print(f"Finding best sell value for {base}")
         currency_obj = currency('sell', base)
-        currency_obj.storeData()
+        currency_obj.getBestRate()
 
-    print(vars(args))
