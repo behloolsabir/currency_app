@@ -55,7 +55,7 @@ class currency:
         return df[['date', 'rates',
                    'source']].rename_axis('quote').reset_index()
 
-    def compareRates(self):
+    def compareRates(self, df1, df2):
         """
         Pulls data from all the sources and selects based on the operation
         Returns: DF with best rates 
@@ -65,8 +65,8 @@ class currency:
         and add 
         df3 = self.getFromSource3()
         """
-        df1 = self.getFromSource1()
-        df2 = self.getFromSource2()
+        # df1 = self.getFromSource1()
+        # df2 = self.getFromSource2()
         df = pd.concat([df1, df2]).reset_index(drop=True)
         if self.operation == 'sell':
             idx = df.groupby(['quote'])['rates'].transform(max) == df['rates']
@@ -92,7 +92,9 @@ class currency:
         return fname
 
     def getBestRate(self):
-        df = self.compareRates()
+        df1 = self.getFromSource1()
+        df2 = self.getFromSource2()
+        df = self.compareRates(df1, df2)
         self.storeData(df)
 
 if __name__ == '__main__':
