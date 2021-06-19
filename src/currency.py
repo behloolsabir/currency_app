@@ -65,8 +65,6 @@ class currency:
         and add 
         df3 = self.getFromSource3()
         """
-        # df1 = self.getFromSource1()
-        # df2 = self.getFromSource2()
         df = pd.concat([df1, df2]).reset_index(drop=True)
         if self.operation == 'sell':
             idx = df.groupby(['quote'])['rates'].transform(max) == df['rates']

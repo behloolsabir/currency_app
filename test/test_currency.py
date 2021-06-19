@@ -87,6 +87,3 @@ class TestCurrency(unittest.TestCase):
         self.assertCountEqual(['SourceA', 'SourceB'], curr_b)
         self.assertCountEqual(['SourceA'], curr_c)
         self.assertCountEqual(['SourceB'], curr_d)
-
-if __name__ == "__main__":
-    unittest.main()
