@@ -3,6 +3,7 @@
 ![Travis Status](https://img.shields.io/travis/behloolsabir/currency_app)
 
 ## What is this?
+--- 
 This is a Python app. It sources the currency rates from multiple sources and gives the best sell or buy options for all the valid currencies for the base currency. 
 
 ### Supported Sources
@@ -31,6 +32,19 @@ To get both buy and sale values for USD
 ```sh
 python -m src.main -sb usd
 ```
+### Unit Test 
+---
+To run unit test run: 
+```sh
+pytest
+```
+
 ## Output
 ---
 Output is saved in `data` of parent of working directory. 
+
+## Design Comments
+---
+* Design is flexible to add new providers in future. 
+  * Add a new child class to provider base class to add a new provider. 
+* Output is provided in a model class named `trade` so that any future changes to output ways can be handled gracefully. 
