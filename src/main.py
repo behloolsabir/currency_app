@@ -1,15 +1,16 @@
 import argparse
 import warnings
 import yaml
-from provider import source1, source2
-import utils
+
+from src.provider import source1, source2
+from src import utils
 
 warnings.filterwarnings("ignore")
 
 
 if __name__ == '__main__':
     # capturing all valid currencies
-    with open('config.yaml') as f:
+    with open('src/config.yaml') as f:
         try:
             config_dict = yaml.safe_load(f)
         except yaml.YAMLError as exc:
@@ -40,6 +41,6 @@ if __name__ == '__main__':
     base = args.base[0].lower()
 
     providers = [source1(), source2()]
-    for operation in args.operations: 
+    for operation in args.operations:
         print(f"Finding best {operation} value for {base}")
         utils.transact(providers, base, operation)

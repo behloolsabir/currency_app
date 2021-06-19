@@ -6,16 +6,9 @@ import os, sys
 
 sys.path.insert(0, os.path.abspath("."))
 
-# scriptPath = os.path.realpath(os.path.dirname(sys.argv[0]))
-# os.chdir(scriptPath)
-# myPath = os.path.dirname(os.path.abspath(__file__))
-# print(myPath)
-# sys.path.insert(0, myPath + '/../src')
 
 from src import utils
 from src.provider import source1, source2
-
-# https://stackoverflow.com/questions/12813633/how-to-assert-two-list-contain-the-same-elements-in-python
 
 class TestCurrency(unittest.TestCase):
     def test_getFromSource(self):
@@ -30,7 +23,6 @@ class TestCurrency(unittest.TestCase):
     def test_buy_compareRates(self):
         base = 'base_curr'
         operation = 'buy'
-        # currency_obj = currency.currency(operation, base)
 
         df1 = pd.DataFrame({
             'quote': ['curr_a', 'curr_b', 'curr_c'],
@@ -63,7 +55,6 @@ class TestCurrency(unittest.TestCase):
     def test_sell_compareRates(self):
         base = 'base_curr'
         operation = 'sell'
-        # currency_obj = currency.currency(operation, base)
 
         df1 = pd.DataFrame({
             'quote': ['curr_a', 'curr_b', 'curr_c'],

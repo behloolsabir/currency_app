@@ -20,12 +20,16 @@ Refer to the [requirements.txt](src/requirements.txt) for the dependencies.
 Sample:<br>
 To get sell values for USD
 ```sh
-python currency.py -s usd
+python -m src.main -s usd
 ```
 
 To get buy values for USD
 ```sh
-python currency.py -b usd
+python -m src.main -b usd
+```
+To get both buy and sale values for USD
+```sh
+python -m src.main -sb usd
 ```
 ## Output
 ---

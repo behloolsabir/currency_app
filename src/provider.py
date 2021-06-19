@@ -4,6 +4,7 @@ import requests
 class provider:
     """
     Provider object.
+    Takes the input of base_url and returns the dataframe.
     """
     def __init__(self, base_url):
         self.base_url = base_url
@@ -19,10 +20,6 @@ class provider:
         # print(f"Fetching data from {url}")
         return requests.get(self.getURL(base))
 
-
-
-
-
 class source1(provider):
     """
     Fawazahmed0 source.
@@ -37,10 +34,6 @@ class source1(provider):
         return url
 
     def parseResponse(self, base):
-        """
-        Source: fawazahmed0
-        Returns: DF with source, date and rates
-        """
         resopnse = super().getData(base)
 
         if resopnse.status_code != 200:
@@ -66,10 +59,6 @@ class source2(provider):
         return url
 
     def parseResponse(self, base):
-        """
-        Source: fawazahmed0
-        Returns: DF with source, date and rates
-        """
         try:
             resopnse = super().getData(base)
             # resopnse = requests.get(url)

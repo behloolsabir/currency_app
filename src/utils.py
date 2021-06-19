@@ -3,24 +3,14 @@ import pandas as pd
 import datetime
 from pathlib import Path
 
-import os, sys
-
-scriptPath = os.path.realpath(os.path.dirname(sys.argv[0]))
-os.chdir(scriptPath)
-
-
 from src.trade import trade
 from src.currency import currency
 
 def compareRates(dfs, base, operation):
     """
-    Pulls data from all the sources and selects based on the operation
-    Returns: DF with best rates 
-    Scalability: 
-    To add more sources add 
-    def getFromSource3()
-    and add 
-    df3 = self.getFromSource3()
+    Based on operation selects the right provider for currency couple. 
+    Returns: List of trade objects for each quote currency. 
+    Scalability: It will automatically handle new sources passed as dataframes in 'dfs'.
     """
     df = pd.concat(dfs).reset_index(drop=True)
     if operation == 'sell':
@@ -31,8 +21,6 @@ def compareRates(dfs, base, operation):
         print("Invalid operation\nValid values: \n1. Buy\n2.Sell")
         os.exit(0)
     df = df[idx]
-    # df['Operation'] = operation.capitalize()
-    # df['Base Currency'] = base.upper()
     trades = []
     for idx, row in df.iterrows():
         trades.append(trade(currency(base), currency(row["quote"]), row["date"], row["source"], row["rates"], operation.capitalize()))
@@ -40,13 +28,17 @@ def compareRates(dfs, base, operation):
 
 
 def transact(providers, base, operation):
+    """
+    Executes the operation on all the given providers. 
+    Best rates as per the operation are stored. 
+    """
     dfs = []
     for provider in providers:
         dfs.append(provider.parseResponse(base))
-    storeData(compareRates(dfs, base, operation), base, operation)
+    storeDataToCSV(compareRates(dfs, base, operation), base, operation)
 
 
-def storeData(trades, base, operation):
+def storeDataToCSV(trades, base, operation):
     """
     Takes the final input and saves in the output_path
     This can later be updated to save the output in any database. With appropriate connection details passed to it.
@@ -62,6 +54,5 @@ def storeData(trades, base, operation):
     fname = f'{output_path}/bestrate_{operation}_{base}_{dt}.csv'
     print(f"Output is saved here: {fname}")
     Path(output_path).mkdir(parents=True, exist_ok=True)
-    # df.columns = df.columns.str.capitalize()
     df.to_csv(fname, index=False)
     return fname
